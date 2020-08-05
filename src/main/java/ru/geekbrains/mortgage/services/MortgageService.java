@@ -15,12 +15,14 @@ public class MortgageService {
 
     private final MortgageApplicationRepository repository;
     private final PoliceService policeService;
+    private final TaxService taxService;
 
     public MortgageService(
         MortgageApplicationRepository repository,
-        PoliceService policeService) {
+        PoliceService policeService,TaxService taxService) {
         this.repository = repository;
         this.policeService = policeService;
+        this.taxService = taxService;
     }
 
     public MortgageList getAllMortgages() {
@@ -35,15 +37,31 @@ public class MortgageService {
     }
 
     public MortgageResponse registerApplication(MortgageRequest request) {
+        ResolutionStatus status;
+        String resolution;
         MortgageApplication application = new MortgageApplication();
         application.setName(request.getName());
-        application.setStatus(ResolutionStatus.SUCCESSFUL);
+
+        if (policeService.getIsTerrorist(application)){
+            status = ResolutionStatus.TERRORIST;
+            resolution = "No";
+        }
+        else {
+            status = ResolutionStatus.SUCCESSFUL;
+            resolution = "OK";
+        }
+        if (taxService.getIsLowBudget(application)&& (status == ResolutionStatus.SUCCESSFUL)){
+            status = ResolutionStatus.LOW_BUDGET;
+            resolution = "No";
+        }
+
+        application.setStatus(status);
 
         application = repository.save(application);
         MortgageResponse response = new MortgageResponse();
         response.setId(application.getId());
         response.setRequest(request);
-        response.setResolution("OK");
+        response.setResolution(resolution);
         return response;
     }
 }

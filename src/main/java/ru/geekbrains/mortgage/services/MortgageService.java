@@ -38,21 +38,17 @@ public class MortgageService {
 
     public MortgageResponse registerApplication(MortgageRequest request) {
         ResolutionStatus status;
-        String resolution;
         MortgageApplication application = new MortgageApplication();
         application.setName(request.getName());
 
         if (policeService.getIsTerrorist(application)){
             status = ResolutionStatus.TERRORIST;
-            resolution = "No";
         }
         else {
             status = ResolutionStatus.SUCCESSFUL;
-            resolution = "OK";
         }
-        if (taxService.getIsLowBudget(application)&& (status == ResolutionStatus.SUCCESSFUL)){
+        if (taxService.getIsLowBudget(application) && (status == ResolutionStatus.SUCCESSFUL)){
             status = ResolutionStatus.LOW_BUDGET;
-            resolution = "No";
         }
 
         application.setStatus(status);
@@ -61,7 +57,13 @@ public class MortgageService {
         MortgageResponse response = new MortgageResponse();
         response.setId(application.getId());
         response.setRequest(request);
-        response.setResolution(resolution);
+        if ((status == ResolutionStatus.SUCCESSFUL)){
+            response.setResolution("OK");
+        }
+        else{
+            response.setResolution("NO");
+        }
+
         return response;
     }
 }
